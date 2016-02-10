@@ -4,8 +4,11 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.qcri.rheem.core.mapping.Mapping;
+import org.qcri.rheem.core.plan.executionplan.Channel;
+import org.qcri.rheem.core.plan.executionplan.ChannelInitializer;
 import org.qcri.rheem.core.platform.Executor;
 import org.qcri.rheem.core.platform.Platform;
+import org.qcri.rheem.spark.channels.Channels;
 import org.qcri.rheem.spark.mapping.*;
 
 import java.util.Collection;
@@ -76,5 +79,10 @@ public class SparkPlatform extends Platform {
     @Override
     public Executor.Factory getExecutorFactory() {
         return SparkExecutor.FACTORY;
+    }
+
+    @Override
+    public <T extends Channel> ChannelInitializer<T> getChannelInitializer(Class<T> channelClass) {
+        return Channels.getChannelInitializer(channelClass);
     }
 }

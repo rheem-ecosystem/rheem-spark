@@ -2,7 +2,7 @@ package org.qcri.rheem.spark.mapping;
 
 import org.qcri.rheem.basic.operators.FilterOperator;
 import org.qcri.rheem.core.mapping.*;
-import org.qcri.rheem.core.plan.Operator;
+import org.qcri.rheem.core.plan.rheemplan.Operator;
 import org.qcri.rheem.spark.operators.SparkFilterOperator;
 
 import java.util.Collection;
