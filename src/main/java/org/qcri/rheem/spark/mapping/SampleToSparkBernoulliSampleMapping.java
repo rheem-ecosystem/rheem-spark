@@ -1,6 +1,6 @@
 package org.qcri.rheem.spark.mapping;
 
-import org.qcri.rheem.basic.operators.BernoulliSampleOperator;
+import org.qcri.rheem.basic.operators.SampleOperator;
 import org.qcri.rheem.core.function.PredicateDescriptor;
 import org.qcri.rheem.core.mapping.*;
 import org.qcri.rheem.spark.operators.SparkBernoulliSampleOperator;
@@ -10,10 +10,10 @@ import java.util.Collection;
 import java.util.Collections;
 
 /**
- * Mapping from {@link BernoulliSampleOperator} to {@link SparkBernoulliSampleOperator}.
+ * Mapping from {@link SampleOperator} to {@link SparkBernoulliSampleOperator}.
  */
 @SuppressWarnings("unchecked")
-public class BernoulliSampleToSparkBernoulliSampleMapping implements Mapping {
+public class SampleToSparkBernoulliSampleMapping implements Mapping {
 
     @Override
     public Collection<PlanTransformation> getTransformations() {
@@ -28,15 +28,14 @@ public class BernoulliSampleToSparkBernoulliSampleMapping implements Mapping {
 
     private SubplanPattern createSubplanPattern() {
         final OperatorPattern operatorPattern = new OperatorPattern(
-                "bernoulliSample", new BernoulliSampleOperator<>((double) 0, (PredicateDescriptor) null, null), false); //TODO: check if the zero here affects execution
+                "bernoulli_sample", new SampleOperator<>((double) 0, (PredicateDescriptor) null), false); //TODO: check if the zero here affects execution
         return SubplanPattern.createSingleton(operatorPattern);
     }
 
     private ReplacementSubplanFactory createReplacementSubplanFactory() {
-        return new ReplacementSubplanFactory.OfSingleOperators<BernoulliSampleOperator>(
+        return new ReplacementSubplanFactory.OfSingleOperators<SampleOperator>(
                 (matchedOperator, epoch) -> new SparkBernoulliSampleOperator<>(
-                        matchedOperator.getFraction(),
-                        matchedOperator.getType(),
+                        matchedOperator.getSampleFraction(),
                         matchedOperator.getPredicateDescriptor()
                 ).at(epoch)
         );
