@@ -1,10 +1,9 @@
 package org.qcri.rheem.spark.operators;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.FlatMapFunction;
 import org.qcri.rheem.basic.operators.MapOperator;
 import org.qcri.rheem.core.function.TransformationDescriptor;
-import org.qcri.rheem.core.optimizer.costs.DefaultLoadEstimator;
 import org.qcri.rheem.core.optimizer.costs.LoadProfileEstimator;
 import org.qcri.rheem.core.optimizer.costs.NestableLoadProfileEstimator;
 import org.qcri.rheem.core.plan.rheemplan.ExecutionOperator;
@@ -16,27 +15,33 @@ import org.qcri.rheem.spark.channels.RddChannel;
 import org.qcri.rheem.spark.compiler.FunctionCompiler;
 import org.qcri.rheem.spark.platform.SparkExecutor;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 
 /**
- * Spark implementation of the {@link org.qcri.rheem.basic.operators.MapOperator}.
+ * Spark implementation of the {@link SparkMapPartitionsOperator}.
  */
-public class SparkMapOperator<InputType, OutputType>
+public class SparkMapPartitionsOperator<InputType, OutputType>
         extends MapOperator<InputType, OutputType>
         implements SparkExecutionOperator {
 
     /**
      * Creates a new instance.
      *
-     * @param functionDescriptor
      */
-    public SparkMapOperator(DataSetType inputType, DataSetType outputType,
-                            TransformationDescriptor<InputType, OutputType> functionDescriptor) {
+    public SparkMapPartitionsOperator(TransformationDescriptor<InputType, OutputType> functionDescriptor,
+                                      DataSetType<InputType> inputType, DataSetType<OutputType> outputType) {
         super(functionDescriptor, inputType, outputType);
+    }
+
+    /**
+     * Creates a new instance.
+     *
+     */
+    public SparkMapPartitionsOperator(TransformationDescriptor<InputType, OutputType> functionDescriptor) {
+        this(functionDescriptor,
+                DataSetType.createDefault(functionDescriptor.getInputType()),
+                DataSetType.createDefault(functionDescriptor.getOutputType()));
     }
 
     @Override
@@ -44,25 +49,27 @@ public class SparkMapOperator<InputType, OutputType>
         assert inputs.length == this.getNumInputs();
         assert outputs.length == this.getNumOutputs();
 
-        RddChannel.Instance input = (RddChannel.Instance) inputs[0];
-        RddChannel.Instance output = (RddChannel.Instance) outputs[0];
+        final RddChannel.Instance input = (RddChannel.Instance) inputs[0];
+        final RddChannel.Instance output = (RddChannel.Instance) outputs[0];
+
+        final FlatMapFunction<Iterator<InputType>, OutputType> mapFunction =
+                compiler.compileForMapPartitions(this.functionDescriptor, this, inputs);
 
         final JavaRDD<InputType> inputRdd = input.provideRdd();
-        final Function<InputType, OutputType> mapFunctions = compiler.compile(this.functionDescriptor, this, inputs);
-        final JavaRDD<OutputType> outputRdd = inputRdd.map(mapFunctions);
-
+        final JavaRDD<OutputType> outputRdd = inputRdd.mapPartitions(mapFunction);
         output.accept(outputRdd, sparkExecutor);
     }
 
     @Override
     protected ExecutionOperator createCopy() {
-        return new SparkMapOperator<>(this.getInputType(), this.getOutputType(), this.getFunctionDescriptor());
+        return new SparkMapPartitionsOperator<>(this.getFunctionDescriptor(), this.getInputType(), this.getOutputType());
     }
 
     @Override
     public Optional<LoadProfileEstimator> getLoadProfileEstimator(org.qcri.rheem.core.api.Configuration configuration) {
-        final String specification = configuration.getStringProperty("rheem.spark.map.load");
-        final NestableLoadProfileEstimator mainEstimator = NestableLoadProfileEstimator.parseSpecification(specification);
+        final NestableLoadProfileEstimator mainEstimator = NestableLoadProfileEstimator.parseSpecification(
+                configuration.getStringProperty("rheem.spark.mappartitions.load")
+        );
         return Optional.of(mainEstimator);
     }
 
@@ -80,3 +87,4 @@ public class SparkMapOperator<InputType, OutputType>
         return Collections.singletonList(RddChannel.UNCACHED_DESCRIPTOR);
     }
 }
+
