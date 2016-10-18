@@ -2,6 +2,7 @@ package org.qcri.rheem.spark.mapping;
 
 import org.qcri.rheem.basic.operators.ReduceByOperator;
 import org.qcri.rheem.core.mapping.*;
+import org.qcri.rheem.core.types.DataSetType;
 import org.qcri.rheem.spark.operators.SparkReduceByOperator;
 import org.qcri.rheem.spark.platform.SparkPlatform;
 
@@ -12,32 +13,27 @@ import java.util.Collections;
  * Mapping from {@link ReduceByOperator} to {@link SparkReduceByOperator}.
  */
 @SuppressWarnings("unchecked")
-public class ReduceByToSparkReduceByMapping implements Mapping {
+public class ReduceByMapping implements Mapping {
 
     @Override
     public Collection<PlanTransformation> getTransformations() {
-        return Collections.singleton(
-                new PlanTransformation(
-                        this.createSubplanPattern(),
-                        this.createReplacementSubplanFactory(),
-                        SparkPlatform.getInstance()
-                )
-        );
+        return Collections.singleton(new PlanTransformation(
+                this.createSubplanPattern(),
+                this.createReplacementSubplanFactory(),
+                SparkPlatform.getInstance()
+        ));
     }
 
     private SubplanPattern createSubplanPattern() {
         final OperatorPattern operatorPattern = new OperatorPattern(
-                "reduceBy", new ReduceByOperator<>(null, null, null), false);
+                "reduceBy", new ReduceByOperator<>(null, null, DataSetType.none()), false
+        );
         return SubplanPattern.createSingleton(operatorPattern);
     }
 
     private ReplacementSubplanFactory createReplacementSubplanFactory() {
         return new ReplacementSubplanFactory.OfSingleOperators<ReduceByOperator>(
-                (matchedOperator, epoch) -> new SparkReduceByOperator<>(
-                        matchedOperator.getType(),
-                        matchedOperator.getKeyDescriptor(),
-                        matchedOperator.getReduceDescriptor()
-                ).at(epoch)
+                (matchedOperator, epoch) -> new SparkReduceByOperator<>(matchedOperator).at(epoch)
         );
     }
 }

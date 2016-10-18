@@ -7,21 +7,26 @@ import org.qcri.rheem.spark.operators.SparkMapOperator;
 import org.qcri.rheem.spark.operators.SparkMapPartitionsOperator;
 import org.qcri.rheem.spark.platform.SparkPlatform;
 
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
 /**
  * Mapping from {@link MapOperator} to {@link SparkMapOperator}.
  */
 @SuppressWarnings("unchecked")
-public class MapOperatorToSparkMapPartitionsOperatorMapping implements Mapping {
+public class MapMapping implements Mapping {
 
     @Override
     public Collection<PlanTransformation> getTransformations() {
-        return Collections.singleton(
+        return Arrays.asList(
                 new PlanTransformation(
                         this.createSubplanPattern(),
-                        this.createReplacementSubplanFactory(),
+                        this.createSparkMapReplacementSubplanFactory(),
+                        SparkPlatform.getInstance()
+                ),
+                new PlanTransformation(
+                        this.createSubplanPattern(),
+                        this.createSparkMapPartitionsReplacementSubplanFactory(),
                         SparkPlatform.getInstance()
                 )
         );
@@ -29,17 +34,20 @@ public class MapOperatorToSparkMapPartitionsOperatorMapping implements Mapping {
 
     private SubplanPattern createSubplanPattern() {
         final OperatorPattern operatorPattern = new OperatorPattern(
-                "map", new MapOperator<>(null, DataSetType.none(), DataSetType.none()), false);
+                "map", new MapOperator<>(null, DataSetType.none(), DataSetType.none()), false
+        );
         return SubplanPattern.createSingleton(operatorPattern);
     }
 
-    private ReplacementSubplanFactory createReplacementSubplanFactory() {
+    private ReplacementSubplanFactory createSparkMapReplacementSubplanFactory() {
         return new ReplacementSubplanFactory.OfSingleOperators<MapOperator>(
-                (matchedOperator, epoch) -> new SparkMapPartitionsOperator<>(
-                        matchedOperator.getFunctionDescriptor(),
-                        matchedOperator.getInputType(),
-                        matchedOperator.getOutputType()
-                ).at(epoch)
+                (matchedOperator, epoch) -> new SparkMapOperator<>(matchedOperator).at(epoch)
+        );
+    }
+
+    private ReplacementSubplanFactory createSparkMapPartitionsReplacementSubplanFactory() {
+        return new ReplacementSubplanFactory.OfSingleOperators<MapOperator>(
+                (matchedOperator, epoch) -> new SparkMapPartitionsOperator<>(matchedOperator).at(epoch)
         );
     }
 }
