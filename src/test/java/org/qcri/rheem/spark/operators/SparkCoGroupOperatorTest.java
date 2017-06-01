@@ -27,7 +27,7 @@ public class SparkCoGroupOperatorTest extends SparkOperatorTestBase {
                 new Tuple2<>("x", 1), new Tuple2<>("y", 1), new Tuple2<>("z", 2), new Tuple2<>("w", 4)));
         RddChannel.Instance output = this.createRddChannelInstance();
 
-        // Build the Cartesian operator.
+        // Build the operator.
         SparkCoGroupOperator<Tuple2, Tuple2, Integer> coGroup =
                 new SparkCoGroupOperator<>(
                         new ProjectionDescriptor<>(
