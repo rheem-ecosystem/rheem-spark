@@ -1,5 +1,6 @@
 package io.rheem.spark.operators;
 
+import io.rheem.core.function.FunctionDescriptor;
 import org.apache.spark.api.java.function.Function;
 import io.rheem.basic.operators.LoopOperator;
 import io.rheem.core.api.Configuration;
@@ -38,7 +39,7 @@ public class SparkLoopOperator<InputType, ConvergenceType>
      */
     public SparkLoopOperator(DataSetType<InputType> inputType,
                              DataSetType<ConvergenceType> convergenceType,
-                             PredicateDescriptor.SerializablePredicate<Collection<ConvergenceType>> criterionPredicate,
+                             FunctionDescriptor.SerializablePredicate<Collection<ConvergenceType>> criterionPredicate,
                              Integer numExpectedIterations) {
         super(inputType, convergenceType, criterionPredicate, numExpectedIterations);
     }

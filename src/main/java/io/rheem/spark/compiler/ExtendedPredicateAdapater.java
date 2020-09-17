@@ -1,8 +1,8 @@
 package io.rheem.spark.compiler;
 
+import io.rheem.core.function.FunctionDescriptor;
 import org.apache.spark.api.java.function.Function;
 import io.rheem.core.function.ExecutionContext;
-import io.rheem.core.function.PredicateDescriptor;
 import io.rheem.spark.execution.SparkExecutionContext;
 
 /**
@@ -11,13 +11,13 @@ import io.rheem.spark.execution.SparkExecutionContext;
  */
 public class ExtendedPredicateAdapater<Type> implements Function<Type, Boolean> {
 
-    private final PredicateDescriptor.ExtendedSerializablePredicate<Type> impl;
+    private final FunctionDescriptor.ExtendedSerializablePredicate<Type> impl;
 
     private final SparkExecutionContext executionContext;
 
     private boolean isFirstRun = true;
 
-    public ExtendedPredicateAdapater(PredicateDescriptor.ExtendedSerializablePredicate<Type> extendedFunction,
+    public ExtendedPredicateAdapater(FunctionDescriptor.ExtendedSerializablePredicate<Type> extendedFunction,
                                      SparkExecutionContext sparkExecutionContext) {
         this.impl = extendedFunction;
         this.executionContext = sparkExecutionContext;
