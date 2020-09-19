@@ -1,4 +1,4 @@
-# Rheem Platform "Java Stream"
+# Rheem Platform "Apache Spark"
 
 `rheem-spark` is the repository, here you can found the implementation of the operators which allow the execution of 
 platform "Apache Spark"
