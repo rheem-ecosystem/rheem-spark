@@ -9,7 +9,7 @@
     </parent>
 
     <groupId>io.rheem</groupId>
-    <artifactId>rheem-spark_2.11</artifactId>
+    <artifactId>rheem-spark_${scala.mayor.version}</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
